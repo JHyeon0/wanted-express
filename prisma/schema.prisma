@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// npx prisma migrate dev --name NAME
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String    @db.VarChar(30)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  Apply  Apply[]
+  Resume Resume[]
+  Like   Like[]
+  @@map("users")
+}
+
+model Resume {
+  id        Int    @id @default(autoincrement())
+  title     String
+  file      String @db.VarChar(3000)
+  isPrivate Int    @db.TinyInt
+  user      User   @relation(fields: [userId], references: [id])
+  userId    Int    @map("user_id")
+
+  @@map("resumes")
+}
+
+model Company {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  Recruitment   Recruitment[]
+  CompaniesTags CompaniesTags[]
+  @@map("companies")
+}
+
+model CompaniesTags {
+  id        Int     @id @default(autoincrement())
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId Int     @map("company_id")
+  tags      Tags    @relation(fields: [tagId], references: [id])
+  tagId     Int     @map("tag_id")
+
+  @@map("companies_tags")
+}
+
+model Tags {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  CompaniesTags CompaniesTags[]
+  @@map("tags")
+}
+
+model Recruitment {
+  id                   Int         @id @default(autoincrement())
+  name                 String
+  hireCompensation     Int         @map("hire_compensation")
+  requiredCareerPeriod Int         @map("required_career_period")
+  company              Company     @relation(fields: [companyId], references: [id])
+  companyId            Int         @map("company_id")
+  region               Region      @relation(fields: [regionId], references: [id])
+  regionId             Int         @map("region_id")
+  subcategory          Subcategory @relation(fields: [subcategoryId], references: [id])
+  subcategoryId        Int         @map("subcategory_id")
+
+  Apply Apply[]
+  Like  Like[]
+  @@map("recruitments")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  Subcategory Subcategory[]
+  @@map("categories")
+}
+
+model Subcategory {
+  id         Int      @id @default(autoincrement())
+  name       String
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int      @map("category_id")
+
+  @@map("subcategories")
+  Recruitment Recruitment[]
+}
+
+model Region {
+  id        Int     @id @default(autoincrement())
+  name      String
+  country   Country @relation(fields: [countryId], references: [id])
+  countryId Int     @map("country_id")
+
+  Recruitment Recruitment[]
+  @@map("regions")
+}
+
+model Country {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  Region Region[]
+  @@map("countries")
+}
+
+model Like {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int         @map("user_id")
+  recruitment   Recruitment @relation(fields: [recruitmentId], references: [id])
+  recruitmentId Int         @map("recruitment_id")
+
+  @@map("users_likes_recruitments")
+}
+
+model Apply {
+  id            Int         @id @default(autoincrement())
+  status        String
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int         @map("user_id")
+  recruitment   Recruitment @relation(fields: [recruitmentId], references: [id])
+  recruitmentId Int         @map("recruitment_id")
+
+  @@map("applies")
+}
+
+model ApplyStatus {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(30)
+
+  @@map("apply_statuses")
+}
